@@ -1,0 +1,29 @@
+# Secrets — NEVER commit these
+backend/.env
+spotify-frontend/.env.local
+spotify-frontend/.env
+
+# Data files (too large for GitHub)
+dataset.csv
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Node
+node_modules/
+spotify-frontend/node_modules/
+spotify-frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Antigravity
+.gemini/
+antigravity_skills.md
