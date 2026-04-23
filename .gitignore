@@ -3,9 +3,6 @@ backend/.env
 spotify-frontend/.env.local
 spotify-frontend/.env
 
-# Data files (too large for GitHub)
-dataset.csv
-
 # Python
 __pycache__/
 *.pyc
