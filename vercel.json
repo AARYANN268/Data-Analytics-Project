@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd spotify-frontend && npm install && npm run build",
+  "outputDirectory": "spotify-frontend/dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ]
+}
