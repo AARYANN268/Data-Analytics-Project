@@ -107,6 +107,7 @@ function App() {
   const [artists, setArtists] = useState([]);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -257,12 +258,19 @@ function App() {
     setSearchLoading(true);
     const delay = setTimeout(async () => {
       try {
-        const res = await axios.get(`${API_BASE}/search`, { params: { q: searchQuery } });
+        const res = await axios.get(`${API_BASE}/search`, { params: { q: searchQuery }, signal: controller.signal });
         setSearchResults(res.data.results || []);
-      } catch (err) { console.error(err); }
-      setSearchLoading(false);
+        setError(null);
+      } catch (err) { 
+        if (!axios.isCancel(err)) {
+          console.error(err);
+          setError("Failed to search songs. Please check your connection.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setSearchLoading(false);
+      }
     }, 400);
-    return () => { clearTimeout(delay); setSearchLoading(false); };
+    return () => { clearTimeout(delay); controller.abort(); };
   }, [searchQuery]);
 
   // ── Fetch Artists ──
@@ -273,9 +281,22 @@ function App() {
     const controller = new AbortController();
     
     axios.get(`${API_BASE}/artists`, { params: { mood, region }, signal: controller.signal })
-      .then(res => { if (res.data.artists) setArtists(res.data.artists); })
-      .catch(err => { if (!axios.isCancel(err)) console.error(err); })
-      .finally(() => setLoading(false));
+      .then(res => { 
+        if (!controller.signal.aborted) {
+          if (res.data.artists) setArtists(res.data.artists);
+          if (res.data.error) setError(res.data.error);
+          else setError(null);
+        }
+      })
+      .catch(err => { 
+        if (!axios.isCancel(err)) {
+          console.error(err);
+          setError("Failed to fetch artists. Make sure the backend is running.");
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
 
     return () => controller.abort();
   }, [mood, region, currentView]);
@@ -285,10 +306,24 @@ function App() {
     if (currentView !== 'home' || !singer) return;
     setLoading(true);
     
-    axios.get(`${API_BASE}/recommendations`, { params: { mood, region, singer: singer.id } })
-      .then(res => { if (res.data.songs) setSongs(res.data.songs); })
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false));
+    const controller = new AbortController();
+    axios.get(`${API_BASE}/recommendations`, { params: { mood, region, singer: singer.id }, signal: controller.signal })
+      .then(res => { 
+        if (!controller.signal.aborted) {
+          if (res.data.songs) setSongs(res.data.songs);
+          setError(null);
+        }
+      })
+      .catch(err => { 
+        if (!axios.isCancel(err)) {
+          console.error(err);
+          setError("Failed to fetch recommendations.");
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [singer]);
 
   // ── Auth Screen ──
@@ -394,6 +429,12 @@ function App() {
             </div>
 
             <div className="results-area">
+              {error && (
+                <div className="error-container" style={{padding: '24px', textAlign: 'center', backgroundColor: 'rgba(255, 0, 0, 0.1)', borderRadius: '12px', margin: '20px 0'}}>
+                  <p style={{color: '#ff4444', marginBottom: '12px'}}>{error}</p>
+                  <button className="auth-btn" style={{maxWidth: '120px'}} onClick={() => { setMood(mood); setRegion(region); setError(null); }}>Retry</button>
+                </div>
+              )}
               {loading ? (
                 <div className="loading"><div className="loader-spinner"></div><p>{singer ? 'Loading tracks...' : 'Discovering artists...'}</p></div>
               ) : !singer ? (
