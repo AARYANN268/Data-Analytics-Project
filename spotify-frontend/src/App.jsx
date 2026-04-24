@@ -6,7 +6,7 @@ import { Music, Home, Search, Library, Sun, Moon, ArrowLeft, Heart, Plus, User a
 const MOODS = ['Happy', 'Sad', 'Energetic', 'Calm', 'Party', 'Study'];
 const REGIONS = ['Bollywood', 'Hollywood'];
 const MOOD_COLORS = { Happy: '#FFD700', Sad: '#1E90FF', Energetic: '#FF4500', Calm: '#1DB954', Party: '#FF1493', Study: '#A020F0' };
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://spotify-pro-api.onrender.com/api';
 
 function formatDuration(ms) {
   if (!ms) return '';
